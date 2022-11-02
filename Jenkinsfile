@@ -29,7 +29,7 @@ pipeline {
                 archiveArtifacts 'target/*.jar'
             } // steps
         } // stage
-        
+
         stage ('Build Image'){
             environment {
                 QUAY = credentials ('QUAY_USER')
@@ -69,6 +69,21 @@ pipeline {
                 """
 
             } // steps
+        } // stage
+
+        stage('Deploy - Production') {
+            environment {
+                APP_NAMESPACE = "${env.DEPLOYMENT_PRODUCTION}"
+                QUAY = credentials('QUAY_USER')
+            }
+            input { message 'Deploy to production?' }
+            steps {
+                sh """
+                    oc set image \
+                    deployment ${DEPLOYMENT_PRODUCTION} \
+                    shopping-cart-production=quay.io/${QUAY_USR}/do400-deploying-environments:build-${BUILD_NUMBER} \
+                """ 
+            }
         } // stage
     } // stages
 } // pipeline
